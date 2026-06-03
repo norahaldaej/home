@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HACKNET Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px 0}
+.app{font-family:'Share Tech Mono',monospace;background:#0d0d0d;color:#00ff41;padding:12px;display:flex;flex-direction:column;gap:8px;width:100%;max-width:420px}
+.hdr{border:1px solid #00ff41;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,255,65,0.05)}
+.logo{font-size:14px;font-weight:bold;letter-spacing:3px}
+.dot{width:8px;height:8px;border-radius:50%;background:#00ff41;display:inline-block;animation:bl 1s infinite;margin-right:5px}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:0.1}}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.stat{border:1px solid rgba(0,255,65,0.3);padding:6px;text-align:center;background:rgba(0,255,65,0.03)}
+.sl{font-size:9px;color:#008f24;letter-spacing:1px}
+.sv{font-size:16px;font-weight:bold}
+.sec{border:1px solid rgba(0,255,65,0.3);padding:8px;background:rgba(0,0,0,0.5)}
+.sec-title{font-size:9px;color:#008f24;letter-spacing:2px;margin-bottom:6px}
+.tgt{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border:1px solid rgba(0,255,65,0.2);margin-bottom:4px;cursor:pointer;background:rgba(0,255,65,0.02)}
+.tgt:hover,.tgt.on{border-color:#00ff41;background:rgba(0,255,65,0.1)}
+.tn{font-size:11px}
+.tip{font-size:9px;color:#006618}
+.badge{font-size:9px;padding:2px 6px;border:1px solid}
+.e{color:#00ff41;border-color:#00ff41}
+.m{color:#ffaa00;border-color:#ffaa00}
+.h{color:#ff4444;border-color:#ff4444}
+.btns{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.btn{padding:10px 6px;border:1px solid rgba(0,255,65,0.4);background:transparent;color:#00ff41;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px}
+.btn:hover{background:rgba(0,255,65,0.15);border-color:#00ff41}
+.btn:active{background:rgba(0,255,65,0.3)}
+.btn:disabled{opacity:0.3;cursor:not-allowed}
+.pbar-wrap{display:none;border:1px solid #00ff41;padding:8px;background:rgba(0,255,65,0.05)}
+.pbar-lbl{font-size:9px;color:#008f24;letter-spacing:2px;margin-bottom:4px}
+.pbar-title{font-size:11px;margin-bottom:6px}
+.pbar{height:4px;background:rgba(0,255,65,0.15);overflow:hidden}
+.pbar-fill{height:100%;background:#00ff41;width:0%;transition:width 0.15s}
+.term{border:1px solid rgba(0,255,65,0.3);background:#000;padding:8px;font-size:11px;line-height:1.8;height:200px;overflow-y:auto}
+.term::-webkit-scrollbar{width:3px}
+.term::-webkit-scrollbar-thumb{background:#00ff41}
+.ln{display:flex;gap:5px}
+.pr{color:#008f24;white-space:nowrap;flex-shrink:0}
+.tx{color:#00ff41;word-break:break-all}
+.tx.d{color:#005210}
+.tx.w{color:#ffaa00}
+.tx.s{color:#00ff41;font-weight:bold}
+.tx.er{color:#ff4444}
+.cur{display:inline-block;width:7px;height:12px;background:#00ff41;animation:bl 0.7s infinite;vertical-align:bottom}
+.scanline{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);pointer-events:none;z-index:999}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="app">
+<div class="hdr">
+<span class="logo">◈ HACKNET</span>
+<span><span class="dot"></span><span style="font-size:10px;color:#008f24">ONLINE</span></span>
+</div>
+
+<div class="stats">
+<div class="stat"><div class="sl">LEVEL</div><div class="sv" id="lvl">01</div></div>
+<div class="stat"><div class="sl">HACKS</div><div class="sv" id="hcnt">00</div></div>
+<div class="stat"><div class="sl">SCORE</div><div class="sv" id="scr">0</div></div>
+</div>
+
+<div class="sec">
+<div class="sec-title">▶️ اختر الهدف</div>
+<div class="tgt on" id="t0" onclick="sel(0)">
+<div><div class="tn">HOME_ROUTER</div><div class="tip">192.168.1.1</div></div>
+<span class="badge e">EASY</span>
+</div>
+<div class="tgt" id="t1" onclick="sel(1)">
+<div><div class="tn">CORP_SERVER</div><div class="tip">10.0.0.42</div></div>
+<span class="badge m">MED</span>
+</div>
+<div class="tgt" id="t2" onclick="sel(2)">
+<div><div class="tn">GOV_MAINFRAME</div><div class="tip">172.16.0.99</div></div>
+<span class="badge h">HARD</span>
+</div>
+</div>
+
+<div class="pbar-wrap" id="pw">
+<div class="pbar-lbl">EXPLOIT RUNNING</div>
+<div class="pbar-title" id="ptitle">...</div>
+<div class="pbar"><div class="pbar-fill" id="pf"></div></div>
+</div>
+
+<div class="btns">
+<button class="btn" onclick="hack('scan')">⬡ PORT SCAN</button>
+<button class="btn" onclick="hack('brute')">⚿ BRUTE FORCE</button>
+<button class="btn" onclick="hack('exploit')">⚡ RUN EXPLOIT</button>
+<button class="btn" onclick="hack('bypass')">◈ BYPASS FW</button>
+</div>
+
+<div class="term" id="term">
+<div class="ln"><span class="pr">SYS&gt;</span><span class="tx d">HACKNET v4.2 initialized...</span></div>
+<div class="ln"><span class="pr">SYS&gt;</span><span class="tx s">Connection established.</span></div>
+<div class="ln"><span class="pr">$&gt;</span><span class="tx">اختر هدفاً وابدأ الهجوم<span class="cur"></span></span></div>
+</div>
+</div>
+
+<script>
+const T=[
+{name:'HOME_ROUTER',ip:'192.168.1.1',pts:100,fail:0.1},
+{name:'CORP_SERVER',ip:'10.0.0.42',pts:500,fail:0.35},
+{name:'GOV_MAINFRAME',ip:'172.16.0.99',pts:2000,fail:0.6}
+];
+const H={
+scan:{steps:['فحص المنافذ 1-65535...','رصد الخدمات المفتوحة...','تحليل نقاط الضعف...','اكتمل الفحص.'],ms:2000},
+brute:{steps:['تحميل قاموس كلمات المرور...','محاولة تسجيل الدخول...','تجاوز حد المحاولات...','تم كسر كلمة المرور.'],ms:3000},
+exploit:{steps:['البحث في قاعدة CVE...','تحميل الثغرة...','حقن الكود...','الوصول كـ root.'],ms:2800},
+bypass:{steps:['تحليل قواعد الجدار الناري...','تزوير الحزم...','فتح نفق مشفر...','تم تجاوز الجدار الناري.'],ms:2500}
+};
+let cur=0,hacks=0,score=0,busy=false;
+
+function sel(i){
+cur=i;
+document.querySelectorAll('.tgt').forEach((t,j)=>t.classList.toggle('on',j===i));
+addLog('SYS&gt;',`الهدف: ${T[i].name} [${T[i].ip}]`,'d');
+}
+
+function addLog(pr,tx,cls){
+const term=document.getElementById('term');
+const last=term.querySelector('.cur');if(last)last.remove();
+const ln=document.createElement('div');ln.className='ln';
+ln.innerHTML=`<span class="pr">${pr}</span><span class="tx ${cls}">${tx}</span>`;
+term.appendChild(ln);
+const end=document.createElement('div');end.className='ln';
+end.innerHTML=`<span class="pr">$&gt;</span><span class="tx"><span class="cur"></span></span>`;
+term.appendChild(end);
+term.scrollTop=term.scrollHeight;
+}
+
+function hack(type){
+if(busy)return;
+busy=true;
+const t=T[cur],h=H[type];
+document.querySelectorAll('.btn').forEach(b=>b.disabled=true);
+const pw=document.getElementById('pw');
+const pf=document.getElementById('pf');
+const pt=document.getElementById('ptitle');
+pw.style.display='block';
+pf.style.width='0%';
+addLog('HACK&gt;',`هجوم على ${t.name}...`,'w');
+let i=0;
+const ms=h.ms/h.steps.length;
+const iv=setInterval(()=>{
+if(i<h.steps.length){
+pt.textContent=h.steps[i];
+pf.style.width=((i+1)/h.steps.length*100)+'%';
+addLog('&gt;',h.steps[i],'d');
+i++;
+} else {
+clearInterval(iv);
+setTimeout(()=>{
+const ok=Math.random()>t.fail;
+if(ok){
+hacks++;score+=t.pts;
+const lv=Math.floor(score/300)+1;
+document.getElementById('hcnt').textContent=String(hacks).padStart(2,'0');
+document.getElementById('scr').textContent=score;
+document.getElementById('lvl').textContent=String(lv).padStart(2,'0');
+addLog('SYS&gt;',`✓ تم الاختراق! +${t.pts} نقطة`,'s');
+} else {
+addLog('SYS&gt;','✗ تم اكتشافك! انقطع الاتصال.','er');
+}
+pw.style.display='none';
+pf.style.width='0%';
+document.querySelectorAll('.btn').forEach(b=>b.disabled=false);
+busy=false;
+},300);
+}
+},ms);
+}
+</script>
+</body>
+</html>
